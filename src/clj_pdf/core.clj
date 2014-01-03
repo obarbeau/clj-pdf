@@ -332,7 +332,11 @@
           (if border-width-right (.setBorderWidthRight c  (float border-width-right)))
           (if border-width-top (.setBorderWidthTop c (float border-width-top)))
           (if rotation (.setRotation c (int rotation)))
-          (.setHorizontalAlignment c (get-alignment align))))
+          (.setHorizontalAlignment c (get-alignment align))
+          (.setFixedHeight c 0)
+          (.setPadding c 0)
+;          (.setGrayFill c 0.9)
+          ))
 
       (if (string? content) c (doto c (.addElement (make-section meta content)))))
 
