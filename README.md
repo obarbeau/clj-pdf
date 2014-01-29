@@ -21,7 +21,7 @@ Maven
 <dependency>
   <groupId>clj-pdf</groupId>
   <artifactId>clj-pdf</artifactId>
-  <version>1.11.12</version>
+  <version>1.11.14</version>
 </dependency>
 ```
 
@@ -32,31 +32,31 @@ input and output parameters.
 
 `(pdf in out)`
 
-`in` can be either a vector containing the document or an input stream. If `in` is an input stream then the forms will be read sequentially from it. 
- 
+`in` can be either a vector containing the document or an input stream. If `in` is an input stream then the forms will be read sequentially from it.
+
 `out` can be either a string, in which case it's treated as a file name, or an output stream.
- 
+
 NOTE: using the `:pages` option will cause the complete document to reside in memory for post processing.
 
 
-The documents contain a map with metadata followed by one or more elements. Each element must be a sequence starting with 
+The documents contain a map with metadata followed by one or more elements. Each element must be a sequence starting with
 a keyword specifying the element name or a string which will be treated as a paragraph.
 
 Here's a basic example of a document:
 ```clojure
-(ns example 
+(ns example
   (:use clj-pdf.core))
 
-(pdf 
+(pdf
   [{}
-   [:list {:roman true} 
-          [:chunk {:style :bold} "a bold item"] 
+   [:list {:roman true}
+          [:chunk {:style :bold} "a bold item"]
           "another item"
-          "yet another item"]   
+          "yet another item"]
    [:phrase "some text"]
    [:phrase "some more text"]
    [:paragraph "yet more text"]]
-  "doc.pdf")  
+  "doc.pdf")
 ```
 and the resulting PDF output
 <br/>
@@ -87,7 +87,7 @@ For example, a `pdf-table` is expected to have the following format:
 ```clojure
 [:pdf-table
   [10 20 15]
-  ["foo" [:chunk {:style :bold} "bar"] [:phrase "baz"]] 
+  ["foo" [:chunk {:style :bold} "bar"] [:phrase "baz"]]
   [[:pdf-cell "foo"] [:pdf-cell "foo"] [:pdf-cell "foo"]]
   [[:pdf-cell "foo"] [:pdf-cell "foo"] [:pdf-cell "foo"]]]
 ```
@@ -98,7 +98,7 @@ We can add a helper generate the expected format from the given data:
   (into [:pdf-table column-widths]
     (map (fn [element] [:pdf-cell element]) rows)))
 
-(pdf-table 
+(pdf-table
  [10 20 15]
  [["foo" [:chunk {:style :bold} "bar"] [:phrase "baz"]]
   ["foo" "foo" "foo"]
@@ -108,7 +108,7 @@ We can add a helper generate the expected format from the given data:
 ### Templating
 
 The library provides some rudimentary templating options, the `template` macro can be used to generate a function which accepts a sequence of maps,
-and applies the template to each item. This is primarily meant to complement working with [clojure.java.jdbc](https://github.com/clojure/java.jdbc/), 
+and applies the template to each item. This is primarily meant to complement working with [clojure.java.jdbc](https://github.com/clojure/java.jdbc/),
 which returns sequences of maps representing the table rows.
 
 The $ is used to indicate the anchors in the template. These will be swapped with the values from the map with
@@ -124,7 +124,7 @@ the corresponding keys. For example, given a vector of maps, such as:
     :place "Ulm",
     :occupation "Engineer",
     :name "Vera Ellison"}])
-``` 
+```
 and a template
 ```clojure
 (def employee-template
@@ -140,27 +140,27 @@ the following output will be produced when the template is applied to the data:
 ```clojure
 (employee-template employees)
 
-([:paragraph [:heading "Neil Chetty"] 
-  [:chunk {:style :bold} "occupation: "] "Engineer" "\n" 
-  [:chunk {:style :bold} "place: "] "Nuremberg" "\n" 
-  [:chunk {:style :bold} "country: "] "Germany" [:spacer]] 
- [:paragraph [:heading "Vera Ellison"] 
-  [:chunk {:style :bold} "occupation: "] "Engineer" "\n" 
-  [:chunk {:style :bold} "place: "] "Ulm" "\n" 
+([:paragraph [:heading "Neil Chetty"]
+  [:chunk {:style :bold} "occupation: "] "Engineer" "\n"
+  [:chunk {:style :bold} "place: "] "Nuremberg" "\n"
+  [:chunk {:style :bold} "country: "] "Germany" [:spacer]]
+ [:paragraph [:heading "Vera Ellison"]
+  [:chunk {:style :bold} "occupation: "] "Engineer" "\n"
+  [:chunk {:style :bold} "place: "] "Ulm" "\n"
   [:chunk {:style :bold} "country: "] "Germany" [:spacer]])
 ```
 
 It is also possible to apply post processing to the anchors in the template:
 ```clojure
-(def employee-template-paragraph 
-  (template 
-    [:paragraph 
-     [:heading (if (and $name (.startsWith $name "Alfred")) 
+(def employee-template-paragraph
+  (template
+    [:paragraph
+     [:heading (if (and $name (.startsWith $name "Alfred"))
                  (.toUpperCase $name) $name)]
      [:chunk {:style :bold} "occupation: "] $occupation "\n"
      [:chunk {:style :bold} "place: "] $place "\n"
      [:chunk {:style :bold} "country: "] $country
-     [:spacer]]))    
+     [:spacer]]))
 ```
 
 ## Document Elements
@@ -213,10 +213,10 @@ All fields in the metadata section are optional:
           :footer-separator "text which will be displayed between current page number and total pages, defaults to /"
           :start-page 2 ;optional parameter to indicate on what page the footer starts, has no effect when :pages is set to false
          }
- 
+
  ;; specifies if total pages should be printed in the footer of each page
- :pages true 
- 
+ :pages true
+
  ;; references can be used to cache compiled items for faster compilation,
  ;; see the :reference tag for details
  :references {:batman [:image "batman.jpg"]
@@ -283,7 +283,7 @@ available page sizes:
  :small-paperback
  :tabloid
  ```
-    
+
 defaults to A4 page size if none provided
 
 orientation defaults to portrait, unless :landscape is specified
@@ -296,6 +296,7 @@ A font is defined by a map consisting of the following parameters, all parameter
 * :ttf-name is the name of a TTF font installed on the system. Overrides :family parameter.
 * :size is a number default is 10
 * :style has following options: :bold, :italic, :bold-italic, :normal, :strikethru, :underline defaults to :normal
+* :styles a vector of multiple style keys
 * :color is a vector of [r g b] defaults to black
 
 example font:
@@ -305,6 +306,9 @@ example font:
  :size 18
  :family :helvetica
  :color [0 234 123]}
+
+ {:styles [:bold :underline]
+  :family :helvetica}
 ```
 note: Font styles are additive, for example setting style :italic on the phrase, and then size 20 on a chunk inside the phrase, will result with the chunk having italic font of size 20. Inner elements can override style set by their parents.
 
@@ -318,18 +322,19 @@ Each document section is represented by a vector starting with a keyword identif
 tag :anchor
 
 optional metadata:
- 
+
 * :id name of the anchor
-* :target an external link or a name of the anchor this anchor points to, if referencing another anchor then prefix target with # 
+* :target an external link or a name of the anchor this anchor points to, if referencing another anchor then prefix target with #
 * :style font
+* :styles a vector of font styles
 * :leading number
 
 content:
-    
+
 iText idiosynchorsies:
 
 * when both font style and leading number are specified the content must be a string
-* when leading number is specified content can be a chunk or a string 
+* when leading number is specified content can be a chunk or a string
 * when only font style is specified content must be a string
 * if no font style or leading is specified then content can be a chunk, a phrase, or a string
 
@@ -339,9 +344,9 @@ iText idiosynchorsies:
 [:anchor {:style {:size 15} :leading 20 :id "targetAnchor"} "some anchor"]
 
 [:anchor {:target "#targetAnchor"} "this anchor points to some anchor"]
-   
+
 [:anchor [:phrase {:style :bold} "some anchor phrase"]]
- 
+
 [:anchor "plain anchor"]
 ```
 
@@ -364,25 +369,27 @@ content:
 [:chapter [:paragraph "Second Chapter"]]
 ```
 
-#### Chunk 
+#### Chunk
 
 tag :chunk
 
-optional metadata: 
+optional metadata:
 
 * :sub boolean sets chunk to subscript
 * :super boolean sets chunk to superscript
 
 font metadata (refer to Font section for details)
 
-* :family 
-* :ttf-name 
-* :size 
-* :style 
+* :family
+* :ttf-name
+* :size
+* :style
+* :styles
 * :color
 * :background [r b g]
 
 Note that when using `:ttf-name`, you should set `:register-system-fonts? true` in the document metadata in order to load the available system fonts.
+<<<<<<< HEAD
 
 Note that when using `:ttf-name`, you should set `:register-system-fonts? true` in the document metadata in order to load the available system fonts.
 
@@ -393,15 +400,22 @@ Note that when using `:ttf-name`, you should set `:register-system-fonts? true` 
 Note that when using `:ttf-name`, you should set `:register-system-fonts? true` in the document metadata in order to load the available system fonts.
 
 Note that when using `:ttf-name`, you should set `:register-system-fonts? true` in the document metadata in order to load the available system fonts.
+=======
+>>>>>>> upstream/master
 
 ```clojure
 [:chunk {:style :bold} "small chunk of text"]
 
+<<<<<<< HEAD
+=======
+[:chunk {:styles [:bold :italic]} "small chunk of text"]
+
+>>>>>>> upstream/master
 [:chunk {:background [0 255 0]} "green chunk"]
 
 [:chunk {:color [0 0 0] :background [255 0 0]} "more fun with color"]
 
-[:chunk {:super true} "5"] 
+[:chunk {:super true} "5"]
 
 [:chunk {:sub true} "2"]
 ```
@@ -438,10 +452,11 @@ optional metadata:
 
 * :align specifies alignement of heading possible valuse :left, :center, :right, :justified
 * :style font (refer to Font section for details)
+* :styles font (refer to Font section for details)
 
 ```clojure
 [:heading "Lorem Ipsum"]
-    
+
 [:heading {:style {:size 15}} "Lorem Ipsum"]
 
 [:heading {:style {:size 10 :color [100 40 150] :align :right}} "Foo"]
@@ -451,9 +466,9 @@ optional metadata:
 
 tag :image
 
-image data can be one of java.net.URL, java.awt.Image, byte array, base64 string, or a string representing URL or a file, 
+image data can be one of java.net.URL, java.awt.Image, byte array, base64 string, or a string representing URL or a file,
 images larger than the page margins will automatically be scaled to fit.
- 
+
 optional metadata:
 
 * :scale  number - percentage relative to original image size
@@ -469,18 +484,18 @@ optional metadata:
 
 ```clojure
 
-[:image 
+[:image
    {:xscale     0.5
-    :yscale     0.8       
+    :yscale     0.8
     :align      :center
     :annotation ["FOO" "BAR"]
     :pad-left   100
     :pad-right  50}
-   (javax.imageio.ImageIO/read "mandelbrot.jpg")]   
+   (javax.imageio.ImageIO/read "mandelbrot.jpg")]
 [:image "test/mandelbrot.jpg"]
 [:image "http://clojure.org/space/showimage/clojure-icon.gif"]
 
-   
+
 ```
 
 #### Line
@@ -489,7 +504,7 @@ tag :line
 
 optional metadata:
 
-* :dotted boolean 
+* :dotted boolean
 * :gap number spaces between dots if line is dotted
 
 creates a horizontal line
@@ -526,13 +541,13 @@ content:
 
 
 ```clojure
-[:list {:roman true} 
-       [:chunk {:style :bold} "a bold item"] 
-       "another item" 
+[:list {:roman true}
+       [:chunk {:style :bold} "a bold item"]
+       "another item"
        "yet another item"]
-[:list {:symbol "*"} 
-       [:chunk {:style :bold} "a bold item"] 
-       "another item" 
+[:list {:symbol "*"}
+       [:chunk {:style :bold} "a bold item"]
+       "another item"
        "yet another item"]
 ```
 
@@ -540,7 +555,7 @@ content:
 
 tag :pagebreak
 
-Creates a new page in the document, subsequent content will start on that page. 
+Creates a new page in the document, subsequent content will start on that page.
 Only creates a new page if the current page is not blank; otherwise, it's ignored.
 
 ```clojure
@@ -551,7 +566,7 @@ Only creates a new page if the current page is not blank; otherwise, it's ignore
 
 tag :paragraph
 
-optional metadata: 
+optional metadata:
 
 * :indent number (indentation for the paragraph)
 * :first-line-indent number (indentation for the first line of the paragraph)
@@ -561,11 +576,12 @@ optional metadata:
 
 font metadata (refer to Font section for details)
 
-* :family 
-* :ttf-name 
-* :size 
-* :style 
-* :color 
+* :family
+* :ttf-name
+* :size
+* :style
+* :styles
+* :color
 
 content:
 
@@ -573,7 +589,7 @@ content:
 
 ```clojure
 [:paragraph "a fine paragraph"]
-    
+
 [:paragraph {:keep-together true :indent 20} "a fine paragraph"]
 
 [:paragraph
@@ -581,7 +597,7 @@ content:
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit."]
 
 font set in the paragraph can be modified by its children
-[:paragraph {:indent 50 :color [0 255 221]} 
+[:paragraph {:indent 50 :color [0 255 221]}
   [:phrase {:style :bold :size 18 :family :halvetica} "Hello Clojure!"]]
 
 [:paragraph "256" [:chunk {:super true} "5"] " or 128" [:chunk {:sub true} "2"]]
@@ -592,17 +608,18 @@ font set in the paragraph can be modified by its children
 
 tag :phrase
 
-optional metadata: 
+optional metadata:
 
 * :leading number
 
 font metadata (refer to Font section for details)
 
-* :family 
-* :ttf-name 
-* :size 
-* :style 
-* :color 
+* :family
+* :ttf-name
+* :size
+* :style
+* :styles
+* :color
 
 content:
 
@@ -612,7 +629,7 @@ content:
 ```clojure
 [:phrase "some text here"]
 
-[:phrase {:style :bold :size 18 :family :halvetica :color [0 255 221]} 
+[:phrase {:style :bold :size 18 :family :halvetica :color [0 255 221]}
          "Hello Clojure!"]
 
 [:phrase [:chunk {:style :italic} "chunk one"]
@@ -660,7 +677,7 @@ optional metadata:
    [:section [:paragraph {:size 10} "Section Title"]
     [:paragraph "Some content"]
     [:paragraph "Some more content"]
-    [:section {:color [100 200 50]} [:paragraph "Nested Section Title"]               
+    [:section {:color [100 200 50]} [:paragraph "Nested Section Title"]
               [:paragraph "nested section content"]]]]
 ```
 
@@ -671,9 +688,9 @@ tag :spacer
 creates a number of new lines equal to the number passed in (1 space is default)
 
 ```clojure
-[:spacer ] ;creates 1 new lines 
+[:spacer ] ;creates 1 new lines
 [:spacer 5] ;creates 5 new lines
-``` 
+```
 
 #### String
 
@@ -690,7 +707,8 @@ tag :subscript
 optional metadata:
 
 * :style font
- 
+* :styles fonts
+
 creates a text chunk in subscript
 
 ```clojure
@@ -706,7 +724,8 @@ tag :superscript
 optional metadata:
 
 * :style font
- 
+* :styles fonts
+
 creates a text chunk in subscript
 
 ```clojure
@@ -734,7 +753,7 @@ optional metadata (refer to Graphics section for details):
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
    <!DOCTYPE svg>
    <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"304\" height=\"290\">
-     <path d=\"M2,111 h300 l-242.7,176.3 92.7,-285.3 92.7,285.3 z\" 
+     <path d=\"M2,111 h300 l-242.7,176.3 92.7,-285.3 92.7,285.3 z\"
            style=\"fill:#FB2;stroke:#BBB;stroke-width:15;stroke-linejoin:round\"/>
    </svg>"]
 ```
@@ -751,7 +770,7 @@ tag :table
 metadata:
 
 * :align table alignment on the page can be: :left, :center, :right, :justified
-* :color  `[r g b]` (int values)   
+* :color  `[r g b]` (int values)
 * :header `[{:color [r g b]} "column name" ...]` if only a single column name is provided it will span all rows.
 * :header can also be formatted via a collection of phrases or paragraphs `[{:color [r g b]} [:paragraph ...]`
 * :spacing number
@@ -768,34 +787,34 @@ metadata:
 
 ```clojure
 [:table {:header ["Row 1" "Row 2" "Row 3"] :width 50 :border false :cell-border false}
-  [[:cell {:colspan 2} "Foo"] "Bar"]             
-  ["foo1" "bar1" "baz1"] 
+  [[:cell {:colspan 2} "Foo"] "Bar"]
+  ["foo1" "bar1" "baz1"]
   ["foo2" "bar2" "baz2"]]
-     
-[:table {:border-width 10 :header ["Row 1" "Row 2" "Row 3"]} 
-  ["foo" "bar" "baz"] 
-  ["foo1" "bar1" "baz1"] 
+
+[:table {:border-width 10 :header ["Row 1" "Row 2" "Row 3"]}
+  ["foo" "bar" "baz"]
+  ["foo1" "bar1" "baz1"]
   ["foo2" "bar2" "baz2"]]
 
 ;; the widths will be: a width of 50% for the first column,
-;; 25% for the second and third column.     
+;; 25% for the second and third column.
 [:table {:border false
-	     :widths [2 1 1] 
-         :header [{:color [100 100 100]} "Singe Header"]} 
-  ["foo" "bar" "baz"] 
-  ["foo1" "bar1" "baz1"] 
+	     :widths [2 1 1]
+         :header [{:color [100 100 100]} "Singe Header"]}
+  ["foo" "bar" "baz"]
+  ["foo1" "bar1" "baz1"]
   ["foo2" "bar2" "baz2"]]
-     
+
 [:table {:cell-border false
          :header [{:color [100 100 100]} "Row 1" "Row 2" "Row 3"]
          :cellSpacing 20
-         :header-color [100 100 100]} 
-  ["foo" 
-    [:cell 
+         :header-color [100 100 100]}
+  ["foo"
+    [:cell
       [:phrase {:style :italic :size 18 :family :halvetica :color [200 55 221]}
-        "Hello Clojure!"]] 
-    "baz"] 
-  ["foo1" [:cell {:color [100 10 200]} "bar1"] "baz1"] 
+        "Hello Clojure!"]]
+    "baz"]
+  ["foo1" [:cell {:color [100 10 200]} "bar1"] "baz1"]
   ["foo2" "bar2" "baz2"]]
 ```
 
@@ -810,10 +829,10 @@ metadata:
 
 * :color `[r g b]`
 * :spacing-before number
-* :spacing-after number 
+* :spacing-after number
 * :cell-border boolean
 * :bounding-box `[width height]`
-* :horizontal-align :left, :rigth, :center, :justified  
+* :horizontal-align :left, :rigth, :center, :justified
 * :title string
 
 ```clojure
@@ -822,7 +841,7 @@ metadata:
    :horizontal-align :right
    :spacing-before 100}
   [10 20 15]
-  ["foo" [:chunk {:style :bold} "bar"] [:phrase "baz"]] 
+  ["foo" [:chunk {:style :bold} "bar"] [:phrase "baz"]]
   [[:pdf-cell "foo"] [:pdf-cell "foo"] [:pdf-cell "foo"]]
   [[:pdf-cell "foo"] [:pdf-cell "foo"] [:pdf-cell "foo"]]]
 ```
@@ -836,7 +855,7 @@ tag :cell
 metadata:
 
 * :align :left, :center, :right, :justified
-* :color `[r g b]` (int values)   
+* :color `[r g b]` (int values)
 * :colspan number
 * :border boolean
 * :set-border `[:top :bottom :left :right]` list of enabled borders, pass empty vector to disable all borders
@@ -872,7 +891,7 @@ tag :pdf-cell
 
 optional metadata:
 
-* :color `[r g b]` 
+* :color `[r g b]`
 * :align :left, :center, :right, :justified
 * :colspan number
 * :rowspan number
@@ -916,7 +935,7 @@ additional image metadata (draws the chart as a raster bitmap image, default unl
 
 alternative vector metadata (used instead of the default image metadata, draws the chart as a scalable vector diagram)
 
-* :vector boolean - when true, draws the chart at (0,0) on the page, unless the :translate argument is also supplied, in which case the drawing is offset accordingly. 
+* :vector boolean - when true, draws the chart at (0,0) on the page, unless the :translate argument is also supplied, in which case the drawing is offset accordingly.
 * :width num - set width for chart
 * :height num - set height for chart
 
@@ -930,7 +949,7 @@ optional vector metadata (refer to Graphics section for details):
 #### bar chart
 
 ```clojure
-[:chart {:type "bar-chart" :title "Bar Chart" :x-label "Items" :y-label "Quality"} 
+[:chart {:type "bar-chart" :title "Bar Chart" :x-label "Items" :y-label "Quality"}
   [2 "Foo"] [4 "Bar"] [10 "Baz"]]
 ```
 
@@ -938,7 +957,7 @@ The same chart rendered with vector drawing:
 
 ```clojure
 [:chart {:type "bar-chart" :title "Bar Chart" :x-label "Items" :y-label "Quality"
-         :vector true :width 500 :height 400 :translate [50 50]} 
+         :vector true :width 500 :height 400 :translate [50 50]}
   [2 "Foo"] [4 "Bar"] [10 "Baz"]]
 ```
 
@@ -963,7 +982,7 @@ if :time-series is set to true then items on x axis must be dates, the default f
 
 ```clojure
 [:chart
-  {:type :line-chart        
+  {:type :line-chart
    :x-label "foo"
    :y-label "bar"
    :tick-interval 1.5
@@ -979,18 +998,18 @@ if :time-series is set to true then items on x axis must be dates, the default f
    :title   "Time Chart"
    :type    :line-chart}
   ["Incidents"
-   ["2011-01-03-11:20:11" 200] 
-   ["2011-02-11-22:25:01" 400] 
-   ["2011-04-02-09:35:10" 350] 
+   ["2011-01-03-11:20:11" 200]
+   ["2011-02-11-22:25:01" 400]
+   ["2011-04-02-09:35:10" 350]
    ["2011-07-06-12:20:07" 600]]]
-``` 
+```
 
 ```clojure
-[:chart {:type :line-chart 
-         :time-series true 
+[:chart {:type :line-chart
+         :time-series true
          :time-format "MM/yy"
-         :title "Time Chart" 
-         :x-label "time" 
+         :title "Time Chart"
+         :x-label "time"
          :y-label "progress"}
   ["Occurances" ["01/11" 200] ["02/12" 400] ["05/12" 350] ["11/13" 600]]]
 ```
@@ -1188,7 +1207,7 @@ if :time-series is set to true then items on x axis must be dates, the default f
 
 # Users
 
-* [UHN](http://www.simspartners.ca/ourPartners/uhn.aspx) uses clj-pdf to generate reports for advanced clinical documentation.  
+* [UHN](http://www.simspartners.ca/ourPartners/uhn.aspx) uses clj-pdf to generate reports for advanced clinical documentation.
 * [SoftAddicts](http://www.softaddicts.ca/) process HL7 results with a mix of discrete values and images to produce a PDF in real time using clj-pdf.
 
 Let me know if you find this library useful or if you have any suggestions.
